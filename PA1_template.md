@@ -17,6 +17,7 @@ library(sqldf)
 ```
 
 ```r
+library(ggplot2)
 activity <- read.csv("activity.csv")
 ```
 ## What is mean total number of steps taken per day?
@@ -125,9 +126,32 @@ diff_mean_steps <- mean_steps - new_mean_steps
 diff_median_steps <- median_steps - new_median_steps
 ```
 
-The new mean total number of steps taken per day is 10766.  
-The new median total number of steps taken per day is 10765.  
+The new mean total number of steps taken per day is 10749.  
+The new median total number of steps taken per day is 10641.  
 Filling in missing data using this method **has** changed the mean and median step values.  
 There are 17 fewer mean steps and 124 fewer median steps.
 
 ## Are there differences in activity patterns between weekdays and weekends?
+
+#### 1. Create a new factor variable in the dataset with two levels -- "weekday" and "weekend" indicating whether a given date is a weekday or weekend day.
+
+
+```r
+activity$weekday <- as.factor(ifelse(weekdays(as.Date(activity$date)) %in% c("Saturday","Sunday"), "Weekend", "Weekday"))
+```
+
+#### 2. Make a panel plot containing a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis).
+
+
+```r
+weekday_avg <- aggregate(x = activity$steps, by = list(activity$interval,activity$weekday), FUN = mean, na.rm = TRUE)
+names(weekday_avg) <- c("interval", "weekday", "steps")
+weekday_plot <- ggplot(weekday_avg, aes(interval,steps)) +
+                 ggtitle("Average Steps: Weekday vs. Weekend") +
+                 facet_grid(. ~ weekday) +
+                 geom_line(size = 1)
+weekday_plot
+```
+
+![](PA1_template_files/figure-html/unnamed-chunk-11-1.png) 
+
