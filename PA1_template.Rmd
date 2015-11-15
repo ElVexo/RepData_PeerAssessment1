@@ -73,10 +73,34 @@ There are `r missing_values` missing values in the raw data.
 
 #### 2. Devise a strategy for filling in all of the missing values in the dataset. The strategy does not need to be sophisticated. For example, you could use the mean/median for that day, or the mean for that 5-minute interval, etc.
 
-
+The missing values will be replaced by the average steps for that 5-minute interval.
 
 #### 3. Create a new dataset that is equal to the original dataset but with the missing data filled in.
 
+```{r}
+filled_activity <- merge(activity, avg_daily_act, by.x = "interval", by.y = "interval", all.x = TRUE, sort = FALSE)
+names(filled_activity)[2] <- "steps"
+names(filled_activity)[4] <- "avg_steps"
+filled_activity <- sqldf(c('update filled_activity set steps = avg_steps where steps IS NULL', 'select * from main.filled_activity'))
+```
+
 #### 4. Make a histogram of the total number of steps taken each day and Calculate and report the mean and median total number of steps taken per day. Do these values differ from the estimates from the first part of the assignment? What is the impact of imputing missing data on the estimates of the total daily number of steps?
+
+```{r}
+sum_steps <- sqldf("select sum(steps) as steps, date 
+                   from filled_activity 
+                   group by date 
+                   order by date")
+hist(sum_steps$steps, main = "Histogram of Steps Taken per Day", xlab = "Steps", col = "lightblue")
+new_mean_steps <- as.integer(sqldf("select avg(steps) from sum_steps"))
+new_median_steps <- median(sum_steps$steps, na.rm = TRUE)
+diff_mean_steps <- mean_steps - new_mean_steps
+diff_median_steps <- median_steps - new_median_steps
+```
+
+The new mean total number of steps taken per day is `r mean_steps`.  
+The new median total number of steps taken per day is `r median_steps`.  
+Filling in missing data using this method **has** changed the mean and median step values.  
+There are `r diff_mean_steps` fewer mean steps and `r diff_median_steps` fewer median steps.
 
 ## Are there differences in activity patterns between weekdays and weekends?
